@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getHotels, Hotel } from "@/services/travelApi";
+import Itinerary from "./Itinerary";
 
 // SVG check icon
 const CheckIcon = () => (
@@ -23,6 +24,7 @@ const StarIcon = () => (
 export default function Hero() {
   const [mode, setMode] = useState<"single" | "multi">("single");
   const [destinations, setDestinations] = useState([{ id: 1, city: "", date: new Date() }]);
+  const [submittedDestinations, setSubmittedDestinations] = useState<typeof destinations>([]);
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,6 +47,7 @@ export default function Hero() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmittedDestinations([...destinations]);
     const cities = destinations.map(d => d.city).filter(c => c.trim() !== "");
     fetchTravelData(cities);
   };
@@ -176,6 +179,11 @@ export default function Hero() {
           </div>
         </form>
       </div>
+
+      {/* Itinerary Timeline */}
+      {mode === "multi" && submittedDestinations.length > 0 && !isLoading && (
+        <Itinerary destinations={submittedDestinations} />
+      )}
 
       {/* Loading State or Cards Grid */}
       {isLoading ? (
