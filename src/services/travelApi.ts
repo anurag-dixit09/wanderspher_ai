@@ -132,11 +132,11 @@ const mockDatabase: Record<string, Hotel[]> = {
   ]
 };
 
-export async function getHotels(cities: string[]): Promise<Hotel[]> {
+export async function getHotels(locations: { city: string, lat?: number, lng?: number }[]): Promise<Hotel[]> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 800));
 
-  const validCities = cities.map(c => c.trim().toLowerCase()).filter(c => c.length > 0);
+  const validCities = locations.map(l => l.city.trim().toLowerCase()).filter(c => c.length > 0);
   
   if (validCities.length === 0) {
     return mockDatabase.default;

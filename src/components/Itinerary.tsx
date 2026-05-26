@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 export interface Destination {
   id: number;
   city: string;
+  placeId?: string;
+  lat?: number;
+  lng?: number;
   date: Date;
 }
 

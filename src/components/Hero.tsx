@@ -5,7 +5,9 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getHotels, Hotel } from "@/services/travelApi";
-import Itinerary from "./Itinerary";
+import Itinerary, { Destination } from "./Itinerary";
+import { APIProvider } from "@vis.gl/react-google-maps";
+import CityAutocomplete from "./CityAutocomplete";
 
 // SVG check icon
 const CheckIcon = () => (
@@ -23,15 +25,29 @@ const StarIcon = () => (
 
 export default function Hero() {
   const [mode, setMode] = useState<"single" | "multi">("single");
-  const [destinations, setDestinations] = useState([{ id: 1, city: "", date: new Date() }]);
-  const [submittedDestinations, setSubmittedDestinations] = useState<typeof destinations>([]);
+  const [destinations, setDestinations] = useState<Destination[]>([{ id: 1, city: "", date: new Date() }]);
+  const [submittedDestinations, setSubmittedDestinations] = useState<Destination[]>([]);
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [heroImage, setHeroImage] = useState<string | null>(null);
 
-  const fetchTravelData = async (cities: string[]) => {
+  const fetchCityImage = async (city: string) => {
+    if (!city || !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY) return;
+    try {
+      const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(city + " city landmark")}&orientation=landscape&per_page=1&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}`);
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        setHeroImage(data.results[0].urls.regular);
+      }
+    } catch (err) {
+      console.error("Failed to fetch image", err);
+    }
+  };
+
+  const fetchTravelData = async (locations: { city: string, lat?: number, lng?: number }[]) => {
     setIsLoading(true);
     try {
-      const data = await getHotels(cities);
+      const data = await getHotels(locations);
       setHotels(data);
     } catch (error) {
       console.error("Failed to fetch hotels:", error);
@@ -48,8 +64,8 @@ export default function Hero() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittedDestinations([...destinations]);
-    const cities = destinations.map(d => d.city).filter(c => c.trim() !== "");
-    fetchTravelData(cities);
+    const validDestinations = destinations.filter(d => d.city.trim() !== "");
+    fetchTravelData(validDestinations);
   };
 
   const toggleMode = (newMode: "single" | "multi") => {
@@ -73,8 +89,25 @@ export default function Hero() {
     setDestinations(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d));
   };
 
+  const updateCityData = (id: number, city: string, placeId?: string, lat?: number, lng?: number) => {
+    setDestinations(prev => prev.map(d => d.id === id ? { ...d, city, placeId, lat, lng } : d));
+    if (placeId) {
+      fetchCityImage(city);
+    }
+  };
+
   return (
-    <section className="flex flex-col items-center w-full px-8 py-16 max-w-[1200px] mx-auto">
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
+      <section 
+        className="flex flex-col items-center w-full px-8 py-16 max-w-[1200px] mx-auto transition-all duration-1000"
+        style={heroImage ? {
+          backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0.98)), url(${heroImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderRadius: '32px',
+          marginTop: '16px'
+        } : {}}
+      >
       {/* Search Header */}
       <div className="w-full mb-8 pl-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="text-left">
@@ -116,21 +149,10 @@ export default function Hero() {
                 style={{ opacity: 1, maxHeight: '100px' }}
               >
                 {/* City Input */}
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <input 
-                    type="text" 
-                    placeholder="Where to? (e.g. Tokyo, Paris)" 
-                    value={dest.city}
-                    onChange={(e) => updateDestination(dest.id, "city", e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coral/50 transition-all focus:bg-white"
-                  />
-                </div>
+                <CityAutocomplete
+                  value={dest.city}
+                  onChange={(city, placeId, lat, lng) => updateCityData(dest.id, city, placeId, lat, lng)}
+                />
 
                 {/* Date Picker */}
                 <div className="relative w-48">
@@ -247,6 +269,7 @@ export default function Hero() {
           ))}
         </div>
       )}
-    </section>
+      </section>
+    </APIProvider>
   );
 }
