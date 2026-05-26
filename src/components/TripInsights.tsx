@@ -218,7 +218,7 @@ export default function TripInsights({ destinations, hotels }: TripInsightsProps
         {/* Cost Breakdown Bar Chart */}
         <div className="border border-gray-100 p-5 md:p-6 rounded-2xl flex flex-col h-[350px]">
           <h3 className="text-base font-medium text-gray-800 mb-4">Cost Breakdown by Destination</h3>
-          <div className="flex-1 w-full text-xs">
+          <div className="w-full h-[260px] text-xs">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={insightsData}
@@ -290,7 +290,7 @@ export default function TripInsights({ destinations, hotels }: TripInsightsProps
         {distanceProfileData.length > 0 && (
           <div className="border border-gray-100 p-5 md:p-6 rounded-2xl flex flex-col h-[350px] lg:col-span-2">
             <h3 className="text-base font-medium text-gray-800 mb-4">Cumulative Travel Distance Profile</h3>
-            <div className="flex-1 w-full text-xs">
+            <div className="w-full h-[260px] text-xs">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={distanceProfileData}

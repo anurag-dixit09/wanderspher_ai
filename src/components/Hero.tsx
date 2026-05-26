@@ -8,6 +8,7 @@ import { getHotels, Hotel } from "@/services/travelApi";
 import Itinerary, { Destination } from "./Itinerary";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import CityAutocomplete from "./CityAutocomplete";
+import TripInsights from "./TripInsights";
 
 // SVG check icon
 const CheckIcon = () => (
@@ -268,6 +269,18 @@ export default function Hero() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Trip Insights Dashboard */}
+        {!isLoading && (
+          <TripInsights
+            destinations={
+              submittedDestinations.length > 0
+                ? submittedDestinations
+                : [{ id: 1, city: "Paris", lat: 48.8566, lng: 2.3522, date: new Date() }]
+            }
+            hotels={hotels}
+          />
         )}
       </section>
     </APIProvider>
