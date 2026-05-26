@@ -135,23 +135,18 @@ export default function TripInsights({ destinations, hotels }: TripInsightsProps
 
   // Pie chart budget distribution
   const pieData = [
-    { name: "Lodging", value: totalLodging, color: "#0A1128" }, // Deep Navy
-    { name: "Transportation", value: totalTransit, color: "#FF5A5F" }, // Coral
-    { name: "Activities & Food", value: totalActivities, color: "#F59E0B" }, // Warm Amber
+    { name: "Hotels", value: totalLodging, color: "#0A1128" }, // Deep Navy
+    { name: "Transport", value: totalTransit, color: "#FF5A5F" }, // Coral
+    { name: "Food", value: totalActivities, color: "#F59E0B" }, // Warm Amber
   ];
 
-  // Cumulative distance line/area chart data
-  let runningDistance = 0;
-  const distanceProfileData = insightsData
+  // Distance bar chart data (distance between stops)
+  const distanceBarData = insightsData
     .filter((d) => d.distance > 0 || validDestinations.length === 1)
-    .map((d) => {
-      runningDistance += d.distance;
-      return {
-        leg: d.legName,
-        Distance: runningDistance,
-        "Leg Distance": d.distance,
-      };
-    });
+    .map((d) => ({
+      leg: d.legName,
+      distance: d.distance,
+    }));
 
   // Render a loading state during server-side render to prevent hydration mismatches
   if (!mounted) {
@@ -215,33 +210,9 @@ export default function TripInsights({ destinations, hotels }: TripInsightsProps
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Cost Breakdown Bar Chart */}
-        <div className="border border-gray-100 p-5 md:p-6 rounded-2xl flex flex-col h-[350px]">
-          <h3 className="text-base font-medium text-gray-800 mb-4">Cost Breakdown by Destination</h3>
-          <div className="w-full h-[260px] text-xs">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={insightsData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
-              >
-                <XAxis dataKey="city" stroke="#9CA3AF" tickLine={false} />
-                <YAxis stroke="#9CA3AF" tickLine={false} unit="$" />
-                <Tooltip
-                  formatter={(value: any) => [`$${value}`, ""]}
-                  contentStyle={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #F3F4F6", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: "10px" }} />
-                <Bar dataKey="lodgingCost" name="Lodging" stackId="costs" fill="#0A1128" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="transitCost" name="Transportation" stackId="costs" fill="#FF5A5F" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="activitiesCost" name="Activities & Food" stackId="costs" fill="#F59E0B" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
         {/* Budget Allocation Pie Chart */}
         <div className="border border-gray-100 p-5 md:p-6 rounded-2xl flex flex-col h-[350px]">
-          <h3 className="text-base font-medium text-gray-800 mb-4">Total Budget Allocation</h3>
+          <h3 className="text-base font-medium text-gray-800 mb-4">Estimated Cost Breakdown</h3>
           <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-6">
             <div className="w-full md:w-1/2 h-[200px] text-xs">
               <ResponsiveContainer width="100%" height="100%">
@@ -286,41 +257,26 @@ export default function TripInsights({ destinations, hotels }: TripInsightsProps
           </div>
         </div>
 
-        {/* Travel Distance Progression Line/Area Chart */}
-        {distanceProfileData.length > 0 && (
-          <div className="border border-gray-100 p-5 md:p-6 rounded-2xl flex flex-col h-[350px] lg:col-span-2">
-            <h3 className="text-base font-medium text-gray-800 mb-4">Cumulative Travel Distance Profile</h3>
-            <div className="w-full h-[260px] text-xs">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={distanceProfileData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
-                >
-                  <defs>
-                    <linearGradient id="colorDistance" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FF5A5F" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#FF5A5F" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="leg" stroke="#9CA3AF" tickLine={false} />
-                  <YAxis stroke="#9CA3AF" tickLine={false} unit="km" />
-                  <Tooltip
-                    formatter={(value: any) => [`${value} km`, ""]}
-                    contentStyle={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #F3F4F6", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="Distance"
-                    stroke="#FF5A5F"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#colorDistance)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+        {/* Travel Distance Bar Chart */}
+        <div className="border border-gray-100 p-5 md:p-6 rounded-2xl flex flex-col h-[350px]">
+          <h3 className="text-base font-medium text-gray-800 mb-4">Travel Distances Between Stops</h3>
+          <div className="w-full h-[260px] text-xs">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={distanceBarData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
+              >
+                <XAxis dataKey="leg" stroke="#9CA3AF" tickLine={false} />
+                <YAxis stroke="#9CA3AF" tickLine={false} unit=" km" />
+                <Tooltip
+                  formatter={(value: any) => [`${value} km`, "Distance"]}
+                  contentStyle={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #F3F4F6", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}
+                />
+                <Bar dataKey="distance" name="Distance" fill="#FF5A5F" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
