@@ -98,7 +98,7 @@ export default function Hero() {
 
   return (
     <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
-      <section 
+      <section
         className="flex flex-col items-center w-full px-8 py-16 max-w-[1200px] mx-auto transition-all duration-1000"
         style={heroImage ? {
           backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0.98)), url(${heroImage})`,
@@ -108,167 +108,167 @@ export default function Hero() {
           marginTop: '16px'
         } : {}}
       >
-      {/* Search Header */}
-      <div className="w-full mb-8 pl-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="text-left">
-          <h1 className="text-[26px] font-normal text-gray-800 mb-2">
-            Compare Your Top Picks
-          </h1>
-          <p className="text-gray-600 max-w-2xl text-[15px] leading-relaxed">
-            Refining your journey from premium luxury to authentic local stays. Review side-by-side details to finalize your experience.
-          </p>
-        </div>
-      </div>
-
-      {/* Interactive Search Box */}
-      <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-12">
-        {/* Toggle */}
-        <div className="flex bg-gray-100 p-1 rounded-full w-fit mb-6">
-          <button 
-            type="button"
-            onClick={() => toggleMode("single")}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === "single" ? "bg-white text-navy shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Single Destination
-          </button>
-          <button 
-            type="button"
-            onClick={() => toggleMode("multi")}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === "multi" ? "bg-white text-navy shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Multi-City Trip
-          </button>
+        {/* Search Header */}
+        <div className="w-full mb-8 pl-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="text-left">
+            <h1 className="text-[26px] font-normal text-gray-800 mb-2">
+              Compare Your Top Picks
+            </h1>
+            <p className="text-gray-600 max-w-2xl text-[15px] leading-relaxed">
+              Refining your journey from premium luxury to authentic local stays. Review side-by-side details to finalize your experience.
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSearch} className="flex flex-col gap-4">
-          <div className="space-y-3">
-            {destinations.map((dest, index) => (
-              <div 
-                key={dest.id} 
-                className="flex items-center gap-3 transition-all duration-300 ease-in-out transform origin-top"
-                style={{ opacity: 1, maxHeight: '100px' }}
-              >
-                {/* City Input */}
-                <CityAutocomplete
-                  value={dest.city}
-                  onChange={(city, placeId, lat, lng) => updateCityData(dest.id, city, placeId, lat, lng)}
-                />
+        {/* Interactive Search Box */}
+        <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-12">
+          {/* Toggle */}
+          <div className="flex bg-gray-100 p-1 rounded-full w-fit mb-6">
+            <button
+              type="button"
+              onClick={() => toggleMode("single")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === "single" ? "bg-white text-navy shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Single Destination
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleMode("multi")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === "multi" ? "bg-white text-navy shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Multi-City Trip
+            </button>
+          </div>
 
-                {/* Date Picker */}
-                <div className="relative w-48">
-                  <DatePicker 
-                    selected={dest.date}
-                    onChange={(date: Date | null) => date && updateDestination(dest.id, "date", date)}
-                    className="w-full pl-4 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-coral/50 transition-all focus:bg-white"
-                    dateFormat="MMM d, yyyy"
+          <form onSubmit={handleSearch} className="flex flex-col gap-4">
+            <div className="space-y-3">
+              {destinations.map((dest, index) => (
+                <div
+                  key={dest.id}
+                  className="flex items-center gap-3 transition-all duration-300 ease-in-out transform origin-top"
+                  style={{ opacity: 1, maxHeight: '100px' }}
+                >
+                  {/* City Input */}
+                  <CityAutocomplete
+                    value={dest.city}
+                    onChange={(city, placeId, lat, lng) => updateCityData(dest.id, city, placeId, lat, lng)}
                   />
-                </div>
 
-                {/* Remove Button (only show if multi mode and more than 1 row) */}
-                {mode === "multi" && destinations.length > 1 && (
-                  <button 
-                    type="button" 
-                    onClick={() => removeDestination(dest.id)}
-                    className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  {/* Date Picker */}
+                  <div className="relative w-48">
+                    <DatePicker
+                      selected={dest.date}
+                      onChange={(date: Date | null) => date && updateDestination(dest.id, "date", date)}
+                      className="w-full pl-4 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-coral/50 transition-all focus:bg-white"
+                      dateFormat="MMM d, yyyy"
+                    />
+                  </div>
+
+                  {/* Remove Button (only show if multi mode and more than 1 row) */}
+                  {mode === "multi" && destinations.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeDestination(dest.id)}
+                      className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between mt-2 pt-4 border-t border-gray-100">
+              <div>
+                {mode === "multi" && (
+                  <button
+                    type="button"
+                    onClick={addDestination}
+                    className="flex items-center gap-2 text-coral font-medium hover:text-coral/80 transition-colors px-2 py-1"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
+                    Add Destination
                   </button>
                 )}
               </div>
+              <button type="submit" className="bg-navy hover:bg-navy-dark text-white px-8 py-3 rounded-xl font-medium transition-colors shadow-md">
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Itinerary Timeline */}
+        {mode === "multi" && submittedDestinations.length > 0 && !isLoading && (
+          <Itinerary destinations={submittedDestinations} />
+        )}
+
+        {/* Loading State or Cards Grid */}
+        {isLoading ? (
+          <div className="w-full py-20 flex justify-center items-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-coral"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+            {hotels.map((hotel) => (
+              <div key={hotel.id} className="relative bg-white rounded-2xl overflow-hidden border-2 border-coral/80 shadow-md flex flex-col">
+                {/* Image Container */}
+                <div className="relative w-full h-[220px]">
+                  <Image
+                    src={hotel.image}
+                    alt={hotel.name}
+                    fill
+                    className="object-cover"
+                  />
+
+                  {/* Optional Tag (BEST VALUE) */}
+                  {hotel.tag && (
+                    <div className="absolute top-4 left-4 bg-coral text-white text-[11px] font-semibold tracking-wide px-3 py-1 rounded-full z-10">
+                      {hotel.tag}
+                    </div>
+                  )}
+
+                  {/* Selected Checkbox Icon */}
+                  <div className="absolute top-4 right-4 bg-coral text-white w-[26px] h-[26px] rounded-md flex items-center justify-center shadow-sm z-10">
+                    <CheckIcon />
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="text-[17px] font-normal text-gray-900">{hotel.name}</h3>
+                    {hotel.city && (
+                      <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {hotel.city}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center text-sm text-gray-600 mb-6">
+                    <StarIcon />
+                    <span className="font-medium text-gray-800 mr-1">{hotel.rating}</span>
+                    <span>({hotel.reviews.toLocaleString()} reviews)</span>
+                  </div>
+
+                  <div className="mt-auto flex items-end justify-between">
+                    <div>
+                      <p className="text-[11px] text-gray-500 font-medium tracking-wider mb-1 uppercase">Per Night</p>
+                      <p className="text-xl font-normal text-gray-900">${hotel.price}</p>
+                    </div>
+                    <a href="#" className="text-coral font-medium text-[15px] flex items-center gap-1.5 group">
+                      View Details <span className="text-lg leading-none transition-transform group-hover:translate-x-1">→</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-
-          <div className="flex items-center justify-between mt-2 pt-4 border-t border-gray-100">
-            <div>
-              {mode === "multi" && (
-                <button 
-                  type="button" 
-                  onClick={addDestination}
-                  className="flex items-center gap-2 text-coral font-medium hover:text-coral/80 transition-colors px-2 py-1"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Destination
-                </button>
-              )}
-            </div>
-            <button type="submit" className="bg-navy hover:bg-navy-dark text-white px-8 py-3 rounded-xl font-medium transition-colors shadow-md">
-              Search
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Itinerary Timeline */}
-      {mode === "multi" && submittedDestinations.length > 0 && !isLoading && (
-        <Itinerary destinations={submittedDestinations} />
-      )}
-
-      {/* Loading State or Cards Grid */}
-      {isLoading ? (
-        <div className="w-full py-20 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-coral"></div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-          {hotels.map((hotel) => (
-            <div key={hotel.id} className="relative bg-white rounded-2xl overflow-hidden border-2 border-coral/80 shadow-md flex flex-col">
-              {/* Image Container */}
-              <div className="relative w-full h-[220px]">
-                <Image 
-                  src={hotel.image} 
-                  alt={hotel.name} 
-                  fill 
-                  className="object-cover"
-                />
-                
-                {/* Optional Tag (BEST VALUE) */}
-                {hotel.tag && (
-                  <div className="absolute top-4 left-4 bg-coral text-white text-[11px] font-semibold tracking-wide px-3 py-1 rounded-full z-10">
-                    {hotel.tag}
-                  </div>
-                )}
-                
-                {/* Selected Checkbox Icon */}
-                <div className="absolute top-4 right-4 bg-coral text-white w-[26px] h-[26px] rounded-md flex items-center justify-center shadow-sm z-10">
-                  <CheckIcon />
-                </div>
-              </div>
-              
-              {/* Details */}
-              <div className="p-6 flex flex-col flex-1">
-                <div className="flex items-center justify-between mb-1.5">
-                  <h3 className="text-[17px] font-normal text-gray-900">{hotel.name}</h3>
-                  {hotel.city && (
-                    <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                      {hotel.city}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="flex items-center text-sm text-gray-600 mb-6">
-                  <StarIcon />
-                  <span className="font-medium text-gray-800 mr-1">{hotel.rating}</span>
-                  <span>({hotel.reviews.toLocaleString()} reviews)</span>
-                </div>
-                
-                <div className="mt-auto flex items-end justify-between">
-                  <div>
-                    <p className="text-[11px] text-gray-500 font-medium tracking-wider mb-1 uppercase">Per Night</p>
-                    <p className="text-xl font-normal text-gray-900">${hotel.price}</p>
-                  </div>
-                  <a href="#" className="text-coral font-medium text-[15px] flex items-center gap-1.5 group">
-                    View Details <span className="text-lg leading-none transition-transform group-hover:translate-x-1">→</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        )}
       </section>
     </APIProvider>
   );
