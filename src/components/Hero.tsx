@@ -8,7 +8,12 @@ import { getHotels, Hotel } from "@/services/travelApi";
 import Itinerary, { Destination } from "./Itinerary";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import CityAutocomplete from "./CityAutocomplete";
-import TripInsights from "./TripInsights";
+import dynamic from "next/dynamic";
+
+const TripInsights = dynamic(() => import("./TripInsights"), {
+  ssr: false,
+});
+
 
 // SVG check icon
 const CheckIcon = () => (
