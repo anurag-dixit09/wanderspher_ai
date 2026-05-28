@@ -1,5 +1,6 @@
 "use client";
 
+// TripInsights Component - Displays trip cost breakdown, lodging pricing, and routing distances.
 import React, { useEffect, useState } from "react";
 import { Destination } from "./Itinerary";
 import { Hotel } from "@/services/travelApi";
