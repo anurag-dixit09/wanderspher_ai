@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
+import { useMapsLibrary } from "@vis.gl/react-google-maps";
 
 interface CityAutocompleteProps {
   value: string;
@@ -13,26 +10,17 @@ interface CityAutocompleteProps {
 }
 
 export default function CityAutocomplete({ value, onChange, placeholder }: CityAutocompleteProps) {
-  const {
-    ready,
-    value: inputValue,
-    suggestions: { status, data },
-    setValue,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    requestOptions: {
-      types: ["(cities)"],
-    },
-    debounce: 300,
-  });
-
+  const placesLib = useMapsLibrary("places");
+  const [inputValue, setInputValue] = useState(value || "");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [sessionToken, setSessionToken] = useState<any>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Sync prop value to local input value if changed externally
   useEffect(() => {
     if (value !== inputValue) {
-      setValue(value, false);
+      setInputValue(value || "");
     }
   }, [value]);
 
@@ -46,27 +34,122 @@ export default function CityAutocomplete({ value, onChange, placeholder }: CityA
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Initialize session token when places library is loaded
+  useEffect(() => {
+    if (placesLib && !sessionToken) {
+      setSessionToken(new placesLib.AutocompleteSessionToken());
+    }
+  }, [placesLib, sessionToken]);
+
+  // Fetch suggestions with debounce
+  useEffect(() => {
+    if (!placesLib || !inputValue || inputValue.trim() === "" || !sessionToken || !isOpen) {
+      setSuggestions([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      // 1. Try modern Places API (New)
+      try {
+        if (placesLib.AutocompleteSuggestion) {
+          const { suggestions: results } = await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: inputValue,
+            sessionToken,
+            includedPrimaryTypes: ["(cities)"],
+          });
+          const mapped = (results || []).map((s: any) => ({
+            isNewApi: true,
+            raw: s,
+            placeId: s.placePrediction?.placeId,
+            mainText: s.placePrediction?.mainText?.text || s.placePrediction?.mainText || "",
+            secondaryText: s.placePrediction?.secondaryText?.text || s.placePrediction?.secondaryText || "",
+            description: s.placePrediction?.text || [s.placePrediction?.mainText?.text || "", s.placePrediction?.secondaryText?.text || ""].filter(Boolean).join(", "),
+          }));
+          setSuggestions(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn("Places API (New) suggestion fetch failed, trying legacy AutocompleteService:", err);
+      }
+
+      // 2. Fallback: Use Legacy AutocompleteService
+      try {
+        const autocompleteService = new placesLib.AutocompleteService();
+        autocompleteService.getPlacePredictions(
+          {
+            input: inputValue,
+            types: ["(cities)"],
+            sessionToken,
+          },
+          (predictions: any, status: any) => {
+            if (status === "OK" && predictions) {
+              const mapped = predictions.map((p: any) => ({
+                isNewApi: false,
+                raw: p,
+                placeId: p.place_id,
+                mainText: p.structured_formatting?.main_text || "",
+                secondaryText: p.structured_formatting?.secondary_text || "",
+                description: p.description || "",
+              }));
+              setSuggestions(mapped);
+            } else {
+              setSuggestions([]);
+            }
+          }
+        );
+      } catch (fallbackErr) {
+        console.error("Fallback AutocompleteService failed:", fallbackErr);
+        setSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputValue, placesLib, sessionToken, isOpen]);
+
   const handleSelect = async (suggestion: any) => {
-    const { description, place_id } = suggestion;
-    setValue(description, false);
-    clearSuggestions();
+    const description = suggestion.description;
+    setInputValue(description);
+    setSuggestions([]);
     setIsOpen(false);
 
     try {
-      const results = await getGeocode({ address: description });
-      const { lat, lng } = await getLatLng(results[0]);
-      onChange(description, place_id, lat, lng);
+      if (suggestion.isNewApi) {
+        const place = suggestion.raw.placePrediction.toPlace();
+        await place.fetchFields({
+          fields: ["id", "location"],
+        });
+        const lat = place.location?.lat();
+        const lng = place.location?.lng();
+        const placeId = place.id;
+        onChange(description, placeId, lat, lng);
+      } else {
+        const geocoder = new (window as any).google.maps.Geocoder();
+        geocoder.geocode({ placeId: suggestion.placeId }, (results: any, status: any) => {
+          if (status === "OK" && results && results[0]) {
+            const lat = results[0].geometry.location.lat();
+            const lng = results[0].geometry.location.lng();
+            onChange(description, suggestion.placeId, lat, lng);
+          } else {
+            onChange(description, suggestion.placeId);
+          }
+        });
+      }
     } catch (error) {
-      console.error("Error fetching geocode:", error);
-      // Fallback to just the text
-      onChange(description);
+      console.error("Error fetching place details:", error);
+      onChange(description, suggestion.placeId);
+    }
+
+    // Refresh session token for the next query session
+    if (placesLib) {
+      setSessionToken(new placesLib.AutocompleteSessionToken());
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+    const val = e.target.value;
+    setInputValue(val);
     setIsOpen(true);
-    onChange(e.target.value); // Report typing to parent
+    onChange(val); // Report typing to parent
   };
 
   return (
@@ -85,21 +168,20 @@ export default function CityAutocomplete({ value, onChange, placeholder }: CityA
         onFocus={() => setIsOpen(true)}
         className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coral/50 transition-all focus:bg-white disabled:opacity-50"
       />
-      {isOpen && status === "OK" && (
+      {isOpen && suggestions.length > 0 && (
         <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto text-left">
-          {data.map((suggestion) => {
-            const {
-              place_id,
-              structured_formatting: { main_text, secondary_text },
-            } = suggestion;
+          {suggestions.map((suggestion) => {
+            const placeId = suggestion.placeId;
+            const mainText = suggestion.mainText;
+            const secondaryText = suggestion.secondaryText;
             return (
               <li
-                key={place_id}
+                key={placeId}
                 onClick={() => handleSelect(suggestion)}
                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex flex-col border-b border-gray-50 last:border-none transition-colors"
               >
-                <span className="font-medium text-gray-900">{main_text}</span>
-                <span className="text-xs text-gray-500">{secondary_text}</span>
+                <span className="font-medium text-gray-900">{mainText}</span>
+                <span className="text-xs text-gray-500">{secondaryText}</span>
               </li>
             );
           })}
